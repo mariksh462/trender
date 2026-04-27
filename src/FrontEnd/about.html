@@ -1,0 +1,64 @@
+<!-- <!DOCTYPE html> -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tell us more - TR&er</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="about.css">
+    <script src="script.js"></script>
+</head>
+<body>
+    <div class="root">
+        <header class="header">
+            <div class="header_left">
+                <div class="logo_container">
+                    <div class="logo_bars">
+                        <div class="bar bar-1"></div>
+                        <div class="bar bar-2"></div>
+                        <div class="bar bar-3"></div>
+                        <div class="bar bar-4"></div>
+                    </div>
+                    <div class="logo">TR<span class="green_text">&</span>er</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="main about-main">
+            <h1 class="about-title">Tell us more about yourself</h1>
+            
+            <div class="about-workspace">
+                <div class="glass-card card-name">
+                    <input id="userName" class="input-transparent" placeholder="How should we call you?" />
+                </div>
+
+                <div class="glass-card card-age">
+                    <label class="green-label">Your target audience's age?</label>
+                    <input id="userAge" type="range" class="range-slider" min="1" max="100">
+                    <div class="range-labels"><span>1</span><span>100+</span></div>
+                </div>
+
+                <div class="glass-card card-target">
+                    <input id="targetAudience" class="input-transparent" placeholder="What's your target audience's..." />
+                </div>
+
+                <div class="glass-card card-desc">
+                    <textarea id="businessDesc" class="textarea-input" placeholder="Describe your business, if it's can't be described in few words (Optional)"></textarea>
+                </div>
+
+                <div class="glass-card card-source">
+                    <select id="infoSource" class="select-input">
+                        <option value="" disabled selected>How did you know about us?</option>
+                        <option>Social Media</option>
+                        <option>Friends</option>
+                        <option>Advertisement</option>
+                    </select>
+                </div>
+            </div>
+            <div class="actions">
+                <button type="button" class="generate-btn" onclick="generateData()">Save</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
