@@ -23,6 +23,8 @@ function generateData() {
 document.addEventListener('DOMContentLoaded', function() {
     const link = document.getElementById('target_link');
 
+    if(!link) return;
+
     link.addEventListener('click', function(event) {
         // Зупиняємо перехід, щоб встигнути показати alert
         event.preventDefault();
@@ -44,3 +46,20 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = link.href;
     });
 });
+
+function initAgeSlider() {
+    const userAgeSlider = document.getElementById('userAge');
+    const userAgeOutput = document.getElementById('ageValue');
+
+    if (userAgeSlider && userAgeOutput) {
+            function updateAgeDisplay() {
+                userAgeOutput.innerHTML = userAgeSlider.value;
+            }
+
+            userAgeSlider.oninput = updateAgeDisplay;
+            
+            updateAgeDisplay();
+        }
+}
+
+initAgeSlider();

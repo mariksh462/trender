@@ -6,6 +6,19 @@
   font-style: normal;
 }
 
+.root {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    
+    background-image: url('images/background_2.png'); 
+    
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
 .header {
     height: 64px;
     width: 100%;
@@ -37,16 +50,25 @@
     position: absolute;
     background-color: rgba(13, 20, 12, 0.92);
     border-radius: 20px;
-    padding: 15px 20px;
+    padding: 12px 20px;
     border: 1px solid rgba(77, 175, 79, 0.2);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+    transform: scale(1.25);
 }
 
-.card-name { bottom: 25%; left: 3%; width: 200px; }
-.card-age { bottom: 45%; left: 22%; width: 210px; }
-.card-target { top: 20%; left: 32%; width: 240px; }
-.card-desc { bottom: 12%; right: 28%; width: 320px; height: 230px; }
-.card-source { top: 18%; right: 3%; width: 240px; }
+.card-name { bottom: 35%; left: 3%; width: 200px; }
+.card-age { bottom: 50%; left: 22%; width: 210px; }
+.card-target { top: 18%; left: 32%; width: 240px; }
+.card-desc { bottom: 24%; right: 28%; width: 320px; height: 230px; }
+.card-source { top: 18%; right: 4%; width: 240px; }
+
+.age-value {
+    display: block;
+    width: 100%;
+    margin: 4px 0 0;
+    text-align: center;
+    font-weight: 500;
+}
 
 .input-transparent, .select-input, .textarea-input {
     background: transparent;
@@ -61,7 +83,10 @@
     color: #4daf4f;          
     padding: 10px;             
 }
-
+.option_title {
+    display: inline-block;
+    padding-right: 4px;
+}
 .select-input:focus option:checked {
     background: #4daf4f radial-gradient(#4daf4f, #4daf4f);
     color: #060D05;
@@ -125,12 +150,13 @@
     height: 40px;
     min-width: 60px;
     padding: 12px;
-    border-radius: 10px;
-    background-color: #4daf4f;
+    border-radius: 14px;
+    background-color: #296E16;
     border: none;
     outline: none;
     color: #c2e3c4;
     font-weight: 700;
+    transform: scale(1.25);
 }
 
 .generate-btn:hover {
