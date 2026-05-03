@@ -62,4 +62,71 @@ function initAgeSlider() {
         }
 }
 
-initAgeSlider();
+function initPlatformsManager() {
+    const addBtn = document.getElementById('addPlatformBtn');
+    const container = document.getElementById('platformsContainer');
+    // Знаходимо кнопку Continue (перевірте, щоб клас був саме .generate-btn)
+    const continueBtn = document.querySelector('.generate-btn');
+
+    if (!addBtn || !container) return;
+
+    function createPlatformRow() {
+        const row = document.createElement('div');
+        row.className = 'platform-row';
+        row.innerHTML = `
+            <div class="input-wrapper name-box">
+                <label class="green-label">Platform name</label>
+                <!-- ТУТ ДОДАНО КЛАС platform-name -->
+                <input type="text" class="input-transparent platform-name" placeholder="Enter name...">
+            </div>
+            <div class="input-wrapper link-box">
+                <label class="green-label">Link to the platform</label>
+                <!-- ТУТ ДОДАНО КЛАС platform-link ТА ТИП url -->
+                <input type="url" class="input-transparent platform-link" placeholder="https://...">
+            </div>
+        `;
+        return row;
+    }
+
+    addBtn.addEventListener('click', () => {
+        const currentRows = container.querySelectorAll('.platform-row').length;
+        if (currentRows < 5) {
+            const newRow = createPlatformRow();
+            container.appendChild(newRow);
+            newRow.style.opacity = '0';
+            newRow.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => newRow.style.opacity = '1', 10);
+
+            if (container.querySelectorAll('.platform-row').length === 5) {
+                addBtn.style.display = 'none';
+            }
+        }
+    });
+
+    if (continueBtn) {
+        continueBtn.addEventListener('click', () => {
+            const rows = container.querySelectorAll('.platform-row');
+            let summary = "Введені дані:\n";
+
+            rows.forEach((row, index) => {
+                const nameInp = row.querySelector('.platform-name');
+                const linkInp = row.querySelector('.platform-link');
+                
+                const name = nameInp ? nameInp.value.trim() || "—" : "—";
+                const link = linkInp ? linkInp.value.trim() || "—" : "—";
+                
+                summary += `\n${index + 1}. ${name}: ${link}`;
+            });
+
+            alert(rows.length > 0 ? summary : "Список порожній");
+        });
+    }
+}
+// У вашому спільному файлі додайте виклик цієї функції всередині DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Ініціалізація інших сторінок...
+    initAgeSlider();
+
+    // Ініціалізація сторінки платформ
+    initPlatformsManager();
+});
