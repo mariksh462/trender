@@ -1,0 +1,139 @@
+@font-face {
+  font-family: 'Instrument Sans';
+  src: url('fonts/Instrument_Sans/static/InstrumentSans-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+* { box-sizing: border-box; }
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Instrument Sans', sans-serif;
+}
+
+.root {
+    display: flex;
+    flex-direction: column;
+    background-color: #060D05; /* Фолбек */
+    background-image: url('images/background_2.png'); 
+    background-size: cover;
+    background-position: center;
+    min-height: 100vh;
+}
+
+.header {
+    height: 64px;
+    background-color: #060D05;
+    display: flex;
+    align-items: center;
+    padding: 0 40px;
+}
+
+.about-title {
+    color: #2e4d2f;
+    font-size: 44px;
+    font-weight: 800;
+    padding-left: 50px;
+    margin: 40px 0;
+}
+
+.platforms-workspace {
+    position: relative;
+    padding: 0 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+/* Контейнер для рядків (чорна підкладка як на фото) */
+.glass-card-container {
+    background-color: rgba(13, 20, 12, 0.95);
+    border-radius: 24px;
+    padding: 30px;
+    border: 1px solid rgba(77, 175, 79, 0.2);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 1200px;
+}
+
+.platform-row {
+    display: flex;
+    gap: 15px;
+}
+
+.input-wrapper {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(77, 175, 79, 0.1);
+    border-radius: 12px;
+    padding: 10px 15px;
+}
+
+.name-box { width: 300px; }
+.link-box { width: 800px; }
+
+.green-label {
+    display: block;
+    color: #4daf4f;
+    font-size: 11px;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.input-transparent {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #c2e3c4;
+    width: 100%;
+    font-size: 14px;
+}
+
+.add_action_wrapper {
+    display: flex;
+    justify-content: flex-end;
+    width: 1177px;
+    padding: 20px 30px;
+}
+/* Кнопка Листочок */
+.add-btn {
+    align-self: flex-end;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background-color: #88d48a; /* Світло-зелений як на фото */
+    border: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.2s;
+}
+
+.add-btn:hover { transform: scale(1.1); }
+
+.generate-btn {
+    position: fixed;
+    bottom: 40px;
+    right: 50px;
+    padding: 12px 30px;
+    border-radius: 14px;
+    background-color: #296E16;
+    color: #c2e3c4;
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* Стилі для логотипу */
+.logo_container { display: flex; align-items: center; gap: 10px; }
+.logo_bars { display: flex; align-items: flex-end; gap: 3px; }
+.bar { width: 4px; background-color: #4daf4f; border-radius: 2px; }
+.bar-1 { height: 8px; } .bar-2 { height: 14px; } .bar-3 { height: 20px; } .bar-4 { height: 26px; }
+.logo { color: white; font-weight: 700; font-size: 20px; }
+.green_text {
+    color: #4daf4f;
+}
