@@ -1,4 +1,4 @@
-/* Regular Weight */
+
 @font-face {
   font-family: 'Instrument Sans';
   src: url('fonts/Instrument_Sans/static/InstrumentSans-Regular.ttf') format('truetype');
@@ -6,7 +6,6 @@
   font-style: normal;
 }
 
-/* SemiBold Weight */
 @font-face {
   font-family: 'Instrument Sans';
   src: url('fonts/Instrument_Sans/static/InstrumentSans-SemiBold.ttf') format('truetype');
@@ -14,7 +13,6 @@
   font-style: normal;
 }
 
-/* Bold Weight */
 @font-face {
   font-family: 'Instrument Sans';
   src: url('fonts/Instrument_Sans/static/InstrumentSans-Bold.ttf') format('truetype');
@@ -22,7 +20,6 @@
   font-style: normal;
 }
 
-/* Italic */
 @font-face {
   font-family: 'Instrument Sans';
   src: url('fonts/Instrument_Sans/static/InstrumentSans-Italic.ttf') format('truetype');

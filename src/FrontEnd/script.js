@@ -26,23 +26,19 @@ document.addEventListener('DOMContentLoaded', function() {
     if(!link) return;
 
     link.addEventListener('click', function(event) {
-        // Зупиняємо перехід, щоб встигнути показати alert
         event.preventDefault();
 
-        // Беремо дані з твоїх інпутів за ID
         const name = document.getElementById('u_name').value;
         const login = document.getElementById('u_login').value;
         const pass = document.getElementById('u_pass').value;
         const conf = document.getElementById('u_conf').value;
 
-        // Виводимо все в alert
         alert("Введена інформація:\n" + 
               "Username: " + name + "\n" + 
               "Login: " + login + "\n" + 
               "Password: " + pass + "\n" + 
               "Confirm: " + conf);
 
-        // Після натискання "ОК" переходимо за твоїм посиланням
         window.location.href = link.href;
     });
 });
@@ -65,7 +61,6 @@ function initAgeSlider() {
 function initPlatformsManager() {
     const addBtn = document.getElementById('addPlatformBtn');
     const container = document.getElementById('platformsContainer');
-    // Знаходимо кнопку Continue (перевірте, щоб клас був саме .generate-btn)
     const continueBtn = document.querySelector('.generate-btn');
 
     if (!addBtn || !container) return;
@@ -76,12 +71,10 @@ function initPlatformsManager() {
         row.innerHTML = `
             <div class="input-wrapper name-box">
                 <label class="green-label">Platform name</label>
-                <!-- ТУТ ДОДАНО КЛАС platform-name -->
                 <input type="text" class="input-transparent platform-name" placeholder="Enter name...">
             </div>
             <div class="input-wrapper link-box">
                 <label class="green-label">Link to the platform</label>
-                <!-- ТУТ ДОДАНО КЛАС platform-link ТА ТИП url -->
                 <input type="url" class="input-transparent platform-link" placeholder="https://...">
             </div>
         `;
@@ -122,11 +115,9 @@ function initPlatformsManager() {
         });
     }
 }
-// У вашому спільному файлі додайте виклик цієї функції всередині DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Ініціалізація інших сторінок...
+
     initAgeSlider();
 
-    // Ініціалізація сторінки платформ
     initPlatformsManager();
 });
