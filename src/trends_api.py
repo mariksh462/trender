@@ -1,38 +1,39 @@
 from pytrends.request import TrendReq
 
 
-def get_trends_for_topic(keyword):
-    """Збирає тренди з Google. Якщо є блокування 429 - видає резервні дані."""
-    print(f"Збираю аналітику Google Trends для теми: '{keyword}'...")
+def get_top_daily_trends():
+    """Збирає загальні найпопулярніші пошукові тренди в Україні."""
+    print("Збираю загальні топ-тренди Google для України...")
 
     try:
-        # retries і backoff_factor додають затримки між спробами, щоб не "злити" Google
         pytrends = TrendReq(hl='uk-UA', tz=120)
-        pytrends.build_payload([keyword], cat=0, timeframe='now 7-d', geo='UA', gprop='')
 
-        related_data = pytrends.related_queries()
-        top_queries = related_data[keyword]['top']
+        # Отримуємо список трендів для України
+        trending_df = pytrends.trending_searches(pn='ukraine')
 
-        if top_queries is not None:
-            trends_list = top_queries['query'].head(5).tolist()
-            print("\n--- Актуальні пошукові запити (з Google) ---")
+        if not trending_df.empty:
+            # Дані повертаються в таблиці, беремо першу колонку і топ-5 рядків
+            trends_list = trending_df[0].head(5).tolist()
+
+            print("\n--- Найпопулярніші пошукові запити (з Google) ---")
             for i, trend in enumerate(trends_list, 1):
                 print(f"{i}. {trend}")
             return trends_list
         else:
-            print("Немає достатньо даних для цього слова.")
+            print("Google не повернув трендів.")
             return []
 
     except Exception as e:
         print(f"\nПомилка Google Trends: {e}")
         print("Google тимчасово заблокував запит. Вмикаю систему резервних даних...")
 
-        # Резервний набір трендів (Mock-дані), щоб програма не зупинялася
+        # Резервний набір загальнонаціональних трендів
         fallback_trends = [
-            f"{keyword} останні новини",
-            f"{keyword} огляд інструментів",
-            f"{keyword} поради для новачків",
-            f"як працює {keyword}"
+            "штучний інтелект останні новини",
+            "відключення світла графік",
+            "курс долара",
+            "нові технології",
+            "кібербезпека"
         ]
 
         print("\n--- Резервні пошукові запити ---")
@@ -44,4 +45,4 @@ def get_trends_for_topic(keyword):
 
 # Тестовий запуск
 if __name__ == "__main__":
-    get_trends_for_topic("штучний інтелект")
+    get_top_daily_trends()
