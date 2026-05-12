@@ -1,26 +1,22 @@
-from trends_api import get_trends_for_topic
-from ai_generator import generate_smm_post
+from trends_api import get_social_media_trends
+from ai_generator import generate_smm_ideas
 
 
-def run_smm_assistant(base_topic):
-    print("=== Запуск SMM Assistant ===\n")
+def run_smm_assistant():
+    print("=== SMM Assistant: Генератор Креативів ===\n")
 
-    # Отримуємо тренд (або резервний варіант від Дзвінки)
-    trends = get_trends_for_topic(base_topic)
+    user_input = input("Який продукт піаримо? (наприклад: 'одяг', 'кав'ярня'): ")
 
-    if not trends:
-        print("Не вдалося отримати теми. Зупинка.")
+    current_trends = get_social_media_trends()
+
+    if not current_trends:
+        print("Роботу зупинено: немає трендів для генерації.")
         return
 
-    # Беремо найперший запит зі списку
-    top_trend = trends[0]
-    print(f"\n[Система] Обрано тему для генерації: {top_trend}\n")
-
-    # Передаємо тему в Ollama (модуль Лізи) і зберігаємо
-    generate_smm_post(top_trend)
+    generate_smm_ideas(user_input, current_trends)
 
     print("\n=== Роботу завершено ===")
 
 
 if __name__ == "__main__":
-    run_smm_assistant("штучний інтелект")
+    run_smm_assistant()
