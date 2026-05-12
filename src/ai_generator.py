@@ -1,7 +1,6 @@
 import ollama
 from database import save_post
 
-
 def generate_smm_ideas(user_request, trends_list):
     """Генерує ідеї на основі запиту та списку трендів."""
     print(f"\nГенерую стратегію для: '{user_request}'...")
