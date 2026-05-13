@@ -1,73 +1,84 @@
 import json
 import os
-import random
 
 DB_FILE = "users_db.json"
 
 
 def load_users():
-    """Завантажує базу користувачів з файлу."""
     if os.path.exists(DB_FILE):
-        with open(DB_FILE, "r", encoding="utf-8") as file:
-            return json.load(file)
+        try:
+            with open(DB_FILE, "r", encoding="utf-8") as file:
+                return json.load(file)
+        except json.decoder.JSONDecodeError:
+            return {}
     return {}
 
 
-def save_users(data):
-    """Зберігає оновлену базу у файл."""
+def save_users(db):
     with open(DB_FILE, "w", encoding="utf-8") as file:
-        json.dump(data, file, ensure_ascii=False, indent=4)
+        json.dump(db, file, ensure_ascii=False, indent=4)
 
 
-def register_user(username, platform, followers, views):
-    """Зберігає початкові (базові) метрики користувача."""
+def run_manual_analytics(username):
+    """Проводить опитування користувача та рахує динаміку росту."""
+    print(f"\n--- Щоденний звіт для @{username} ---")
+
+    try:
+        current_followers = int(input("1. Скільки у вас сьогодні підписників?: "))
+        current_posts = int(input("2. Яка загальна кількість постів на акаунті?: "))
+        avg_likes = int(input("3. Скільки лайків в середньому збирають останні пости?: "))
+    except ValueError:
+        print("❌ Помилка: потрібно вводити лише цифри. Аналітику скасовано.")
+        return None
+
     db = load_users()
-    db[username] = {
-        "platform": platform,
-        "base_followers": followers,
-        "base_views": views
-    }
-    save_users(db)
 
-
-def get_dashboard_stats(username):
-    """Генерує статистику відносно збережених початкових даних."""
-    db = load_users()
+    # Якщо користувач новий — реєструємо
     if username not in db:
-        return None  # Користувача ще немає в базі
+        print("\n[Система] Зберігаємо ці дані як вашу стартову точку...")
+        db[username] = {
+            "start_followers": current_followers,
+            "start_posts": current_posts,
+            "start_likes": avg_likes
+        }
+        save_users(db)
 
-    user_data = db[username]
+    # Рахуємо динаміку
+    start_data = db[username]
 
-    # Для MVP симулюємо оновлені дані (ніби пройшов час, і цифри виросли)
-    # В майбутньому тут буде парсинг реальних поточних даних
-    current_followers = int(user_data["base_followers"] * random.uniform(1.0, 1.08))
-    current_views = int(user_data["base_views"] * random.uniform(1.0, 1.15))
-
-    # Рахуємо різницю між тим, що було, і тим, що стало
-    fol_diff = current_followers - user_data["base_followers"]
-    views_diff = current_views - user_data["base_views"]
+    fol_diff = current_followers - start_data["start_followers"]
+    posts_diff = current_posts - start_data["start_posts"]
+    likes_diff = avg_likes - start_data["start_likes"]
 
     return {
-        "user": username,
-        "platform": user_data["platform"],
-        "followers": {"total": current_followers, "diff": fol_diff},
-        "views": {"total": current_views, "diff": views_diff},
-        "is_growing": fol_diff >= 0
+        "username": username,
+        "followers": {"current": current_followers, "diff": fol_diff},
+        "posts": {"current": current_posts, "diff": posts_diff},
+        "likes": {"current": avg_likes, "diff": likes_diff}
     }
 
 
 def print_dashboard(data):
-    """Виводить дашборд."""
+    """Виводить результати самоаналізу."""
+    if not data:
+        return
 
-    def get_arrow(value):
-        return f"⬆️ +{value:,}" if value > 0 else f"⬇️ {value:,}"
+    def get_arrow(val):
+        if val > 0:
+            return f"⬆️ +{val:,}"
+        elif val < 0:
+            return f"⬇️ {val:,}"
+        return "➡️ 0 (Без змін)"
 
-    print(f"\n" + "=" * 40)
-    print(f"📊 ГОЛОВНИЙ ЕКРАН: @{data['user']} | {data['platform'].upper()}")
-    print("=" * 40)
-    print(f"👥 Підписники: {data['followers']['total']:,}")
-    print(f"   Динаміка:   {get_arrow(data['followers']['diff'])}")
-    print("-" * 40)
-    print(f"👀 Перегляди:  {data['views']['total']:,}")
-    print(f"   Динаміка:   {get_arrow(data['views']['diff'])}")
-    print("=" * 40 + "\n")
+    print(f"\n" + "=" * 45)
+    print(f"📊 ВАШ РІСТ З МОМЕНТУ РЕЄСТРАЦІЇ: @{data['username']}")
+    print("=" * 45)
+    print(f"👥 Підписники:     {data['followers']['current']:,}")
+    print(f"   Динаміка:       {get_arrow(data['followers']['diff'])}")
+    print("-" * 45)
+    print(f"📝 Кількість постів: {data['posts']['current']:,}")
+    print(f"   Динаміка:         {get_arrow(data['posts']['diff'])}")
+    print("-" * 45)
+    print(f"❤️ Середні лайки:  {data['likes']['current']:,}")
+    print(f"   Динаміка:       {get_arrow(data['likes']['diff'])}")
+    print("=" * 45 + "\n")
