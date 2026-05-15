@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRENDER | Setup Profile</title>
+    <style>
+        * { box-sizing: border-box; }
+        :root {
+            --panel: rgba(0, 0, 0, 0.34);
+            --panel-strong: rgba(0, 0, 0, 0.5);
+            --line: rgba(77, 175, 79, 0.22);
+            --text: #f4fff4;
+            --muted: #cbdccb;
+            --green: #4daf4f;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text);
+            font-family: 'Instrument Sans', -apple-system, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(77, 175, 79, 0.18), transparent 30%),
+                radial-gradient(circle at right center, rgba(77, 175, 79, 0.1), transparent 24%),
+                linear-gradient(135deg, #060d05 0%, #102010 55%, #040804 100%);
+        }
+        .page-shell { max-width: 980px; margin: 0 auto; padding: 24px; }
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+        .logo-badge {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: grid;
+            place-items: center;
+            background: rgba(77, 175, 79, 0.12);
+            border: 1px solid var(--line);
+            color: var(--green);
+        }
+        .hero {
+            background: var(--panel);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            padding: 28px;
+            margin-bottom: 20px;
+        }
+        .hero h1 { margin: 0 0 8px; font-size: 34px; }
+        .hero p { margin: 0; color: var(--muted); line-height: 1.6; }
+        .status {
+            margin-top: 16px;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 14px;
+            line-height: 1.5;
+            display: none;
+        }
+        .status.show { display: block; }
+        .status.error {
+            display: block;
+            background: rgba(255, 59, 48, 0.1);
+            border: 1px solid rgba(255, 59, 48, 0.25);
+            color: #ff9b9b;
+        }
+        .status.success {
+            display: block;
+            background: rgba(77, 175, 79, 0.12);
+            border: 1px solid rgba(77, 175, 79, 0.3);
+            color: #a8f0aa;
+        }
+        .form-grid { display: grid; gap: 18px; }
+        .section {
+            background: var(--panel-strong);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            padding: 24px;
+        }
+        .section-title { margin: 0 0 18px; font-size: 18px; color: var(--green); }
+        .form-group { margin-bottom: 16px; }
+        .form-group:last-child { margin-bottom: 0; }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 13px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(77, 175, 79, 0.25);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+        }
+        .form-group input:focus, .form-group textarea:focus {
+            background: rgba(77, 175, 79, 0.08);
+            border-color: var(--green);
+            transform: translateY(-1px);
+        }
+        .form-group textarea { resize: vertical; min-height: 100px; }
+        .form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+        .platforms {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+        }
+        .platform-check {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(77, 175, 79, 0.15);
+        }
+        .platform-check input { width: 18px; height: 18px; accent-color: var(--green); cursor: pointer; }
+        .platform-check label { cursor: pointer; flex: 1; margin: 0; color: var(--text); }
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            padding: 22px 0 6px;
+        }
+        .submit-btn {
+            min-width: 220px;
+            padding: 14px 18px;
+            background: linear-gradient(135deg, var(--green), #66c96a);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+            box-shadow: 0 12px 30px rgba(77, 175, 79, 0.22);
+        }
+        .submit-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(77, 175, 79, 0.28); }
+        .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
+        .hint { color: var(--muted); font-size: 13px; margin-top: 6px; }
+        @media (max-width: 760px) {
+            .page-shell { padding: 16px; }
+            .hero { padding: 22px; }
+            .hero h1 { font-size: 28px; }
+            .form-row { grid-template-columns: 1fr; }
+            .actions { justify-content: stretch; }
+            .submit-btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-shell">
+        <div class="topbar">
+            <div class="logo">
+                <div class="logo-badge">T</div>
+                <span>TRENDER</span>
+            </div>
+        </div>
+
+        <section class="hero">
+            <h1>Complete your profile</h1>
+            <p>Your profile is used to personalize ideas and analytics. If you already saved it, the fields will be prefilled automatically.</p>
+            <div id="statusMsg" class="status"></div>
+        </section>
+
+        <form id="profileForm" class="form-grid" onsubmit="handleSaveProfile(event)">
+            <section class="section">
+                <h2 class="section-title">Personal Information</h2>
+                <div class="form-group">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" placeholder="Your full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="age">Age</label>
+                    <input type="number" id="age" placeholder="Your age" min="13" max="120">
+                </div>
+            </section>
+
+            <section class="section">
+                <h2 class="section-title">Business Information</h2>
+                <div class="form-group">
+                    <label for="businessName">Business Name</label>
+                    <input type="text" id="businessName" placeholder="Your business/brand name" required>
+                </div>
+                <div class="form-group">
+                    <label for="brandDesc">Brand Description</label>
+                    <textarea id="brandDesc" placeholder="Describe your brand in 2-3 sentences"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="businessPrompt">What does your business do?</label>
+                    <textarea id="businessPrompt" placeholder="E.g., We create e-learning content for tech professionals" required></textarea>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2 class="section-title">Target Audience</h2>
+                <div class="form-group">
+                    <label for="targetAudience">Describe Your Target Audience</label>
+                    <textarea id="targetAudience" placeholder="E.g., Tech-savvy millennials interested in AI" required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ageMin">Min Age</label>
+                        <input type="number" id="ageMin" value="18" min="13" max="120" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="ageMax">Max Age</label>
+                        <input type="number" id="ageMax" value="65" min="13" max="120" required>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2 class="section-title">Social Platforms</h2>
+                <div class="platforms">
+                    <div class="platform-check">
+                        <input type="checkbox" id="tiktok" value="TikTok">
+                        <label for="tiktok">TikTok</label>
+                    </div>
+                    <div class="platform-check">
+                        <input type="checkbox" id="instagram" value="Instagram">
+                        <label for="instagram">Instagram</label>
+                    </div>
+                    <div class="platform-check">
+                        <input type="checkbox" id="youtube" value="YouTube">
+                        <label for="youtube">YouTube</label>
+                    </div>
+                    <div class="platform-check">
+                        <input type="checkbox" id="twitter" value="Twitter">
+                        <label for="twitter">X / Twitter</label>
+                    </div>
+                    <div class="platform-check">
+                        <input type="checkbox" id="linkedin" value="LinkedIn">
+                        <label for="linkedin">LinkedIn</label>
+                    </div>
+                    <div class="platform-check">
+                        <input type="checkbox" id="facebook" value="Facebook">
+                        <label for="facebook">Facebook</label>
+                    </div>
+                </div>
+                <div class="hint">Pick the channels you actually use. The AI will adapt its suggestions to them.</div>
+            </section>
+
+            <div class="actions">
+                <button type="submit" class="submit-btn" id="submitBtn">Save Profile & Go to Dashboard</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const API = 'http://127.0.0.1:8000';
+        const PLATFORM_IDS = ['tiktok', 'instagram', 'youtube', 'twitter', 'linkedin', 'facebook'];
+        const statusMsg = document.getElementById('statusMsg');
+        const submitBtn = document.getElementById('submitBtn');
+
+        function showError(msg) {
+            statusMsg.className = 'status error';
+            statusMsg.textContent = msg;
+        }
+
+        function showSuccess(msg) {
+            statusMsg.className = 'status success';
+            statusMsg.textContent = msg;
+        }
+
+        function setFormValues(profile) {
+            document.getElementById('fullName').value = profile.full_name || '';
+            document.getElementById('age').value = profile.age || '';
+            document.getElementById('businessName').value = profile.business_name || '';
+            document.getElementById('brandDesc').value = profile.brand_description || '';
+            document.getElementById('businessPrompt').value = profile.business_prompt || '';
+            document.getElementById('targetAudience').value = profile.target_audience_desc || '';
+            document.getElementById('ageMin').value = profile.target_audience_age_min || 18;
+            document.getElementById('ageMax').value = profile.target_audience_age_max || 65;
+
+            const selectedPlatforms = new Set(Array.isArray(profile.platforms) ? profile.platforms : []);
+            PLATFORM_IDS.forEach((platformId) => {
+                const checkbox = document.getElementById(platformId);
+                if (checkbox) {
+                    checkbox.checked = selectedPlatforms.has(checkbox.value);
+                }
+            });
+        }
+
+        function setDefaultPlatforms() {
+            ['tiktok', 'instagram', 'youtube'].forEach((platformId) => {
+                const checkbox = document.getElementById(platformId);
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            });
+        }
+
+        function loadProfile() {
+            fetch(API + '/api/me', { credentials: 'include' })
+                .then((response) => {
+                    if (response.status === 401) {
+                        window.location.href = 'index.html';
+                        return null;
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    if (!data) {
+                        return;
+                    }
+
+                    if (data.success && data.profile) {
+                        setFormValues(data.profile);
+                        showSuccess('Profile loaded. Update anything you need and continue.');
+                    } else {
+                        setDefaultPlatforms();
+                    }
+                })
+                .catch(() => {
+                    setDefaultPlatforms();
+                    showError('Could not load your saved profile. You can still fill it in manually.');
+                });
+        }
+
+        function handleSaveProfile(e) {
+            e.preventDefault();
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+
+            const fullName = document.getElementById('fullName').value.trim();
+            const age = parseInt(document.getElementById('age').value) || null;
+            const businessName = document.getElementById('businessName').value.trim();
+            const brandDesc = document.getElementById('brandDesc').value.trim();
+            const businessPrompt = document.getElementById('businessPrompt').value.trim();
+            const targetAudience = document.getElementById('targetAudience').value.trim();
+            const ageMin = parseInt(document.getElementById('ageMin').value) || 18;
+            const ageMax = parseInt(document.getElementById('ageMax').value) || 65;
+
+            if (!fullName || !businessName || !businessPrompt || !targetAudience) {
+                showError('Please fill in required fields');
+                return;
+            }
+
+            const platforms = [];
+            document.querySelectorAll('.platforms input:checked').forEach(cb => {
+                platforms.push(cb.value);
+            });
+
+            fetch(API + '/api/profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    full_name: fullName,
+                    age: age,
+                    business_name: businessName,
+                    brand_description: brandDesc,
+                    business_prompt: businessPrompt,
+                    target_audience_desc: targetAudience,
+                    target_audience_age_min: ageMin,
+                    target_audience_age_max: ageMax,
+                    platforms: platforms
+                }),
+                credentials: 'include'
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    showSuccess('Profile saved! Redirecting...');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1500);
+                } else {
+                    showError(d.error || 'Failed to save profile');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Save Profile & Go to Dashboard';
+                }
+            })
+            .catch(e => {
+                showError('Error: ' + e.message);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Save Profile & Go to Dashboard';
+            });
+        }
+
+        loadProfile();
+    </script>
+</body>
+</html>

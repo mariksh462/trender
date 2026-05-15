@@ -1,97 +1,551 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TR&er | Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="dashboard.js"></script>
-    <link rel="stylesheet" href="dashboard.css">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>TRENDER | Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
+        body {
+            background: #060d05 linear-gradient(135deg, #060d05 0%, #1a2a1a 100%);
+            font-family: 'Instrument Sans', -apple-system, sans-serif;
+            color: white;
+            overflow-x: hidden;
+        }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(77, 175, 79, 0.2);
+        }
+        .logo_container { display: flex; align-items: center; gap: 15px; }
+        .logo_bars { display: flex; align-items: flex-end; gap: 2px; height: 24px; }
+        .bar { width: 4px; background-color: #4daf4f; border-radius: 2px; }
+        .bar-1 { height: 40%; } .bar-2 { height: 70%; } .bar-3 { height: 100%; } .bar-4 { height: 130%; }
+        .logo { font-size: 24px; font-weight: 700; letter-spacing: 1px; }
+        .green_text { color: #4daf4f; }
+        .nav-right { display: flex; gap: 15px; align-items: center; }
+        .profile-btn { width: 40px; height: 40px; background: rgba(77, 175, 79, 0.2); border: 1px solid rgba(77, 175, 79, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #4daf4f; cursor: pointer; transition: background 0.3s; }
+        .profile-btn:hover { background: rgba(77, 175, 79, 0.3); }
+        .logout-btn { background: rgba(255, 59, 48, 0.2); border: 1px solid rgba(255, 59, 48, 0.3); color: #ff6b6b; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.3s; }
+        .logout-btn:hover { background: rgba(255, 59, 48, 0.3); }
+        .btn-generate {
+            background: #4daf4f;
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 30px;
+        }
+        .btn-generate:hover:not(:disabled) {
+            background: #3d9a3f;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(77, 175, 79, 0.3);
+        }
+        .btn-generate:disabled { opacity: 0.6; cursor: not-allowed; }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .card {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(77, 175, 79, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+        .card:hover { border-color: rgba(77, 175, 79, 0.5); background: rgba(77, 175, 79, 0.05); }
+        .chart-box { grid-column: span 2; }
+        .canvas-wrapper { position: relative; height: 300px; }
+        .stat-box { min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #4daf4f; font-weight: 700; }
+        .stat-box.clickable { cursor: pointer; transition: all 0.3s; }
+        .stat-box.clickable:hover { background: rgba(77, 175, 79, 0.08); border-color: rgba(77, 175, 79, 0.45); transform: translateY(-2px); }
+        .stat-value { font-size: 36px; margin-bottom: 5px; }
+        .stat-label { font-size: 14px; opacity: 0.8; }
+        .dark-hero { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(77, 175, 79, 0.2); display: flex; align-items: center; justify-content: center; }
+        .hero-title { font-size: 32px; font-weight: 700; margin: 0; letter-spacing: 2px; }
+        .tagline { font-size: 12px; color: #888; margin: 5px 0 0 0; letter-spacing: 2px; }
+        .info-card { font-size: 14px; color: #cbdccb; line-height: 1.6; }
+        .profile-info { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid rgba(77, 175, 79, 0.2); }
+        .section-title { font-size: 20px; font-weight: 700; color: #4daf4f; margin-bottom: 20px; margin-top: 0; }
+        .trends-list { display: flex; flex-direction: column; gap: 12px; }
+        .trend-item { background: rgba(77, 175, 79, 0.05); border: 1px solid rgba(77, 175, 79, 0.2); padding: 12px; border-radius: 8px; display: flex; align-items: center; gap: 10px; transition: all 0.3s; }
+        .trend-item:hover { background: rgba(77, 175, 79, 0.1); border-color: #4daf4f; }
+        .trend-number { background: rgba(77, 175, 79, 0.3); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+        .trend-text { flex: 1; font-size: 14px; }
+        .ideas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
+        .idea-card { background: rgba(77, 175, 79, 0.05); border: 1px solid rgba(77, 175, 79, 0.2); border-radius: 10px; padding: 15px; cursor: pointer; transition: all 0.3s; }
+        .idea-card:hover { border-color: #4daf4f; background: rgba(77, 175, 79, 0.1); transform: translateY(-3px); }
+        .idea-title { font-size: 16px; font-weight: 700; color: #4daf4f; margin-bottom: 8px; }
+        .idea-desc { font-size: 13px; color: #cbdccb; line-height: 1.5; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); }
+        .modal.show { display: flex; align-items: center; justify-content: center; }
+        .modal-content {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(77, 175, 79, 0.3);
+            border-radius: 20px;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 40px;
+            position: relative;
+            width: 95%;
+        }
+        .modal-close { position: absolute; top: 20px; right: 20px; background: rgba(255, 59, 48, 0.2); border: none; color: #ff6b6b; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+        .modal-close:hover { background: rgba(255, 59, 48, 0.3); }
+        .modal-title { font-size: 28px; font-weight: 700; color: #4daf4f; margin: 0 0 20px 0; }
+        .idea-section { margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid rgba(77, 175, 79, 0.2); }
+        .idea-section:last-child { border-bottom: none; }
+        .idea-section-title { font-size: 16px; font-weight: 700; color: #4daf4f; margin-bottom: 10px; }
+        .idea-section-content { font-size: 14px; color: #cbdccb; line-height: 1.7; white-space: pre-wrap; }
+        .trend-modal-content {
+            max-width: 920px;
+            max-height: 88vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .trend-modal-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            padding-right: 50px;
+        }
+        .trend-modal-kicker { color: #cbdccb; font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; margin: 0 0 8px; }
+        .trend-modal-subtitle { margin: 8px 0 0; color: #cbdccb; line-height: 1.6; }
+        .trend-modal-list {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            overflow: auto;
+            padding-right: 4px;
+        }
+        .trend-modal-item {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            padding: 14px;
+            border-radius: 14px;
+            background: rgba(77, 175, 79, 0.05);
+            border: 1px solid rgba(77, 175, 79, 0.18);
+        }
+        .trend-modal-number {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            background: rgba(77, 175, 79, 0.22);
+            color: #e2ffe3;
+        }
+        .trend-modal-text { flex: 1; min-width: 0; }
+        .trend-modal-title { font-size: 14px; line-height: 1.55; color: #f4fff4; margin: 0; }
+        .trend-modal-source { margin-top: 6px; color: #8ecf91; font-size: 12px; }
+        .trend-modal-empty {
+            padding: 24px;
+            border-radius: 14px;
+            text-align: center;
+            color: #cbdccb;
+            border: 1px dashed rgba(77, 175, 79, 0.25);
+            background: rgba(77, 175, 79, 0.04);
+        }
+        .loading { text-align: center; padding: 20px; color: #4daf4f; font-weight: 700; }
+        .error { color: #ff6b6b; }
+        @media (max-width: 768px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .chart-box { grid-column: 1; }
+            .header { flex-wrap: wrap; }
+            .trend-modal-list { grid-template-columns: 1fr; }
+            .trend-modal-content { max-width: calc(100vw - 24px); }
+        }
+    </style>
 </head>
 <body>
 
 <div class="container">
     <header class="header">
         <div class="logo_container">
-             <div class="logo_bars">
-                 <div class="bar bar-1"></div>
-                 <div class="bar bar-2"></div>
-                 <div class="bar bar-3"></div>
-                 <div class="bar bar-4"></div>
+            <div class="logo_bars">
+                <div class="bar bar-1"></div>
+                <div class="bar bar-2"></div>
+                <div class="bar bar-3"></div>
+                <div class="bar bar-4"></div>
             </div>
-            <div class="logo">TR<span class="green_text">&</span>er</div>
+            <div class="logo">TRENDER</div>
         </div>
-            
-        <nav class="navigation">
-            <a href="#">Feedback</a>
-            <a href="#">Terms & Services</a>
-        </nav>
-        <div class="user-profile">
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 16.66 14.67 14 12 14Z" fill="currentColor"/>
-    </svg>
-</div>
+        
+        <div class="nav-right">
+            <div class="profile-btn" onclick="goToProfile()" title="Profile">
+                <svg viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px;">
+                    <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 16.66 14.67 14 12 14Z" />
+                </svg>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
     </header>
 
-    <div class="actions">
-        <select class="dropdown"><option>Checking on...</option></select>
-        <button class="btn-generate">Generate some ideas!</button>
-    </div>
+    <button class="btn-generate" onclick="generateIdea()">🚀 Generate Idea</button>
 
     <main class="dashboard-grid">
         <div class="card chart-box">
-            <div class="chart-header">
-                <span class="chart-title">New Followers</span>
+            <div style="margin-bottom: 20px;">
+                <span style="font-size: 18px; font-weight: 700; color: #4daf4f;">Activity</span>
             </div>
             <div class="canvas-wrapper">
                 <canvas id="followersChart"></canvas>
             </div>
         </div>
 
-        <div class="card glass-blue top-right"></div>
+        <div class="card stat-box">
+            <div class="stat-value" id="userIdeasCount">0</div>
+            <div class="stat-label">Your Ideas</div>
+        </div>
 
-        <div class="card glass-blue middle-left"></div>
-        <div class="card glass-blue middle-right"></div>
+        <div class="card stat-box clickable" onclick="openTrendsModal()" role="button" tabindex="0" aria-label="Open trending topics">
+            <div class="stat-value" id="trendCountStat">0</div>
+            <div class="stat-label">Trending Now</div>
+        </div>
 
         <div class="card dark-hero">
-            <div class="hero-content">
-                <div class="trander-logo large">
-                    <div class="logo-bars">
+            <div style="text-align: center;">
+                <div style="display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 10px;">
+                    <div class="logo_bars">
                        <div class="bar bar-1"></div>
                         <div class="bar bar-2"></div>
                         <div class="bar bar-3"></div>
                         <div class="bar bar-4"></div>
                     </div>
-                    <div>
-                        <h1 class="hero-title">TR<span class="green_text">&</span>er</h1>
-                        <p class="tagline">[ T r a n d e r ]</p>
-                    </div>
+                    <div class="hero-title">TRENDER</div>
                 </div>
+                <div class="tagline">[ POWERED BY AI ]</div>
             </div>
         </div>
         
         <div class="card info-card">
-            <div class="horizontal-badge">
-                <div class="trander-logo small">
-                    <div class="logo_bars">
-                        <div class="bar bar-1"></div>
-                        <div class="bar bar-2"></div>
-                        <div class="bar bar-3"></div>
-                        <div class="bar bar-4"></div>
-                    </div>
-                    <span>TR<span class="green_text">&</span>er</span>
-                </div>
+            <div class="profile-info">
+                <span style="font-size: 20px;">👤</span>
+                <span style="font-weight: 700;">Your Profile</span>
             </div>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+            <p id="profileInfo" class="loading">Loading...</p>
         </div>
 
-        <div class="card text-card">
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+        <div class="card info-card">
+            <p>AI-powered platform for analyzing trends and generating unique video content ideas for your social media presence. Get data-driven insights and creative inspiration every day.</p>
+        </div>
+
+        <div class="card" style="grid-column: 1 / -1;">
+            <h2 class="section-title">🔥 Trending Topics</h2>
+            <div class="trends-list" id="trendsList">
+                <p class="loading">Loading trends...</p>
+            </div>
+        </div>
+
+        <div class="card" style="grid-column: 1 / -1;">
+            <h2 class="section-title">💡 Your Ideas</h2>
+            <div class="ideas-grid" id="ideasContainer">
+                <p class="loading">Loading...</p>
+            </div>
         </div>
     </main>
 </div>
 
-<script src="script.js"></script>
+<div id="ideaModal" class="modal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <h1 class="modal-title" id="ideaTitle">Idea</h1>
+        <div id="ideaBody"></div>
+    </div>
+</div>
+
+<div id="trendsModal" class="modal" aria-hidden="true">
+    <div class="modal-content trend-modal-content" role="dialog" aria-modal="true" aria-labelledby="trendsTitle">
+        <button class="modal-close" onclick="closeTrendsModal()" aria-label="Close trends window">✕</button>
+        <div class="trend-modal-header">
+            <div>
+                <p class="trend-modal-kicker">Trending now</p>
+                <h1 class="modal-title" id="trendsTitle">Top 100 trends</h1>
+                <p class="trend-modal-subtitle">A curated snapshot of the most active topics. Close it with the button, outside click, or Esc.</p>
+            </div>
+        </div>
+        <div id="trendsModalBody" class="trend-modal-list"></div>
+    </div>
+</div>
+
+<script>
+const API = 'http://127.0.0.1:8000';
+let profile = null;
+let loaded = false;
+let cachedTrends = [];
+
+function closeModal() {
+    document.getElementById('ideaModal').classList.remove('show');
+}
+
+function closeTrendsModal() {
+    document.getElementById('trendsModal').classList.remove('show');
+}
+
+function renderTrendsModal(trends) {
+    const body = document.getElementById('trendsModalBody');
+    if (!trends || trends.length === 0) {
+        body.innerHTML = '<div class="trend-modal-empty">No trends available right now.</div>';
+        return;
+    }
+
+    body.innerHTML = trends.map((trend, index) => {
+        const title = escapeHtml(trend.title || trend);
+        const source = escapeHtml(trend.source || 'Daily feed');
+        return '<article class="trend-modal-item">' +
+            '<div class="trend-modal-number">' + (index + 1) + '</div>' +
+            '<div class="trend-modal-text">' +
+                '<p class="trend-modal-title">' + title + '</p>' +
+                '<div class="trend-modal-source">' + source + '</div>' +
+            '</div>' +
+        '</article>';
+    }).join('');
+}
+
+function openTrendsModal() {
+    const modal = document.getElementById('trendsModal');
+    const body = document.getElementById('trendsModalBody');
+    modal.classList.add('show');
+    body.innerHTML = '<p class="loading">Loading top trends...</p>';
+
+    if (cachedTrends.length > 0) {
+        renderTrendsModal(cachedTrends);
+        return;
+    }
+
+    fetch(API + '/api/trends', { credentials: 'include' })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success && Array.isArray(d.trends)) {
+                cachedTrends = d.trends.map((trend) => ({ title: trend, source: 'Daily trend' }));
+                renderTrendsModal(cachedTrends);
+                document.getElementById('trendCountStat').textContent = d.trends.length;
+            } else {
+                body.innerHTML = '<div class="trend-modal-empty">Could not load trends.</div>';
+            }
+        })
+        .catch(() => {
+            body.innerHTML = '<div class="trend-modal-empty">Could not load trends.</div>';
+        });
+}
+
+function goToProfile() {
+    window.location.href = 'profile.html';
+}
+
+function logout() {
+    if (confirm('Logout?')) {
+        fetch(API + '/api/logout', { method: 'POST', credentials: 'include' })
+            .finally(() => { window.location.href = 'index.html'; });
+    }
+}
+
+function loadProfile() {
+    fetch(API + '/api/me', { credentials: 'include' })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success && d.profile) {
+                profile = d.profile;
+                document.getElementById('profileInfo').innerHTML = 
+                    '<strong>' + profile.full_name + '</strong><br>' +
+                    'Business: ' + profile.business_name + '<br>' +
+                    'Age Range: ' + profile.target_audience_age_min + '-' + profile.target_audience_age_max;
+            } else {
+                document.getElementById('profileInfo').innerHTML = '<span class="error">⚠ <a href="index.html" style="color: #4daf4f;">Sign In</a></span>';
+            }
+        })
+        .catch(e => {
+            console.error(e);
+            document.getElementById('profileInfo').innerHTML = '<span class="error">⚠ Error</span>';
+        });
+}
+
+function loadTrends() {
+    fetch(API + '/api/trends', { credentials: 'include' })
+        .then(r => r.json())
+        .then(d => {
+            const c = document.getElementById('trendsList');
+            if (d.success && d.trends && d.trends.length > 0) {
+                cachedTrends = d.trends.map((trend) => ({ title: trend, source: 'Daily trend' }));
+                c.innerHTML = d.trends.slice(0, 8).map((t, i) => 
+                    '<div class="trend-item">' +
+                    '<div class="trend-number">' + (i + 1) + '</div>' +
+                    '<div class="trend-text">' + t + '</div>' +
+                    '</div>'
+                ).join('');
+                document.getElementById('trendCountStat').textContent = d.trends.length;
+            } else {
+                c.innerHTML = '<p class="error">⚠ Failed to load trends</p>';
+            }
+        })
+        .catch(e => {
+            console.error(e);
+            document.getElementById('trendsList').innerHTML = '<p class="error">⚠ Connection error</p>';
+        });
+}
+
+function loadIdeas() {
+    fetch(API + '/api/ideas', { credentials: 'include' })
+        .then(r => r.json())
+        .then(d => {
+            const c = document.getElementById('ideasContainer');
+            if (d.success && d.ideas && d.ideas.length > 0) {
+                c.innerHTML = d.ideas.map(i => 
+                    '<div class="idea-card" onclick="showIdea(' + i.id + ')">' +
+                    '<div class="idea-title">' + i.title + '</div>' +
+                    '<div class="idea-desc">' + (i.description || 'Click for details') + '</div>' +
+                    '</div>'
+                ).join('');
+                document.getElementById('userIdeasCount').textContent = d.ideas.length;
+            } else {
+                c.innerHTML = '<p class="loading">No ideas yet. Generate your first one!</p>';
+            }
+        })
+        .catch(e => {
+            console.error(e);
+            document.getElementById('ideasContainer').innerHTML = '<p class="error">⚠ Error</p>';
+        });
+}
+
+function showIdea(id) {
+    fetch(API + '/api/ideas/' + id, { credentials: 'include' })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) {
+                displayIdea(d.idea);
+                document.getElementById('ideaModal').classList.add('show');
+            }
+        })
+        .catch(console.error);
+}
+
+function displayIdea(i) {
+    document.getElementById('ideaTitle').textContent = i.title;
+    const scenes = Array.isArray(i.scenes) ? i.scenes : JSON.parse(i.scenes || '[]');
+    const steps = Array.isArray(i.action_steps) ? i.action_steps : JSON.parse(i.action_steps || '[]');
+    const trends = Array.isArray(i.trending_topics) ? i.trending_topics : JSON.parse(i.trending_topics || '[]');
+    
+    document.getElementById('ideaBody').innerHTML = 
+        '<div class="idea-section"><div class="idea-section-title">📝 Description</div><div class="idea-section-content">' + i.description + '</div></div>' +
+        '<div class="idea-section"><div class="idea-section-title">🎬 Hook</div><div class="idea-section-content">' + i.hook + '</div></div>' +
+        '<div class="idea-section"><div class="idea-section-title">📋 Script</div><div class="idea-section-content">' + i.script + '</div></div>' +
+        '<div class="idea-section"><div class="idea-section-title">🎥 Scenes</div><div class="idea-section-content">' + 
+            scenes.map((s, n) => '<div>' + (n+1) + '. ' + s + '</div>').join('') + '</div></div>' +
+        '<div class="idea-section"><div class="idea-section-title">🎨 Visual Style</div><div class="idea-section-content">' + i.visual_style + '</div></div>' +
+        '<div class="idea-section"><div class="idea-section-title">📊 Audience</div><div class="idea-section-content">' + i.target_audience_analysis + '</div></div>' +
+        '<div class="idea-section"><div class="idea-section-title">🔥 Topics</div><div class="idea-section-content">' + trends.join(', ') + '</div></div>' +
+        '<div class="idea-section"><div class="idea-section-title">✅ Action Steps</div><div class="idea-section-content">' + 
+            steps.map((s, n) => '<div>' + (n+1) + '. ' + s + '</div>').join('') + '</div></div>' +
+        '<div class="idea-section"><div class="idea-section-title">🏷️ Hashtags</div><div class="idea-section-content">' + i.hashtags + '</div></div>' +
+        '<div class="idea-section" style="border-bottom: none;"><div class="idea-section-title">💬 CTA</div><div class="idea-section-content">' + i.cta + '</div></div>';
+}
+
+function generateIdea() {
+    const btn = document.querySelector('.btn-generate');
+    btn.disabled = true;
+    btn.textContent = '⏳ Generating...';
+    document.getElementById('ideaModal').classList.add('show');
+    document.getElementById('ideaTitle').textContent = 'Generating...';
+    document.getElementById('ideaBody').innerHTML = '<p class="loading">⏳ Please wait...</p>';
+    
+    fetch(API + '/api/generate-idea', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+        credentials: 'include'
+    })
+    .then(r => r.json())
+    .then(d => {
+        btn.disabled = false;
+        btn.textContent = '🚀 Generate Idea';
+        if (d.success) {
+            displayIdea(d.idea);
+            setTimeout(loadIdeas, 1500);
+        } else {
+            document.getElementById('ideaBody').innerHTML = '<p class="error">Error: ' + (d.error || 'unknown') + '</p>';
+        }
+    })
+    .catch(e => {
+        btn.disabled = false;
+        btn.textContent = '🚀 Generate Idea';
+        console.error(e);
+        document.getElementById('ideaBody').innerHTML = '<p class="error">⚠ Connection error</p>';
+    });
+}
+
+function initChart() {
+    try {
+        const ctx = document.getElementById('followersChart');
+        if (!ctx || !window.Chart) return;
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Activity',
+                    data: [120, 190, 150, 220, 280, 350, 290],
+                    borderColor: '#4daf4f',
+                    backgroundColor: 'rgba(77, 175, 79, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: 'rgba(77, 175, 79, 0.1)' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    } catch(e) { console.error(e); }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (!loaded) {
+        loaded = true;
+        loadProfile();
+        loadTrends();
+        loadIdeas();
+        initChart();
+    }
+}, { once: true });
+
+document.getElementById('ideaModal').addEventListener('click', (e) => {
+    if (e.target.id === 'ideaModal') closeModal();
+});
+
+document.getElementById('trendsModal').addEventListener('click', (e) => {
+    if (e.target.id === 'trendsModal') closeTrendsModal();
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+    if (e.key === 'Escape') closeTrendsModal();
+});
+</script>
 </body>
 </html>

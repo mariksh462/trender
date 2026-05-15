@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TRENDER | Login</title>
+    <title>TRENDER | Register</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -64,23 +64,27 @@
 <body>
     <div class="container">
         <div class="logo">TRENDER</div>
-        <div class="title">Login</div>
+        <div class="title">Create Account</div>
         <div class="error" id="errorMsg"></div>
         
-        <form onsubmit="handleLogin(event)">
+        <form onsubmit="handleRegister(event)">
             <div class="form-group">
                 <label>Username</label>
-                <input type="text" id="username" placeholder="Enter username" required>
+                <input type="text" id="username" placeholder="Choose a username" required>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="email" placeholder="your@email.com" required>
             </div>
             <div class="form-group">
                 <label>Password</label>
-                <input type="password" id="password" placeholder="Enter password" required>
+                <input type="password" id="password" placeholder="Min. 8 characters" required>
             </div>
-            <button type="submit" class="submit-btn" id="submitBtn">Sign In</button>
+            <button type="submit" class="submit-btn" id="submitBtn">Create Account</button>
         </form>
         
         <div class="footer">
-            New user? <a href="register.html">Create an account</a>
+            Already have an account? <a href="index.html">Sign in</a>
         </div>
     </div>
 
@@ -94,64 +98,48 @@
             setTimeout(() => el.classList.remove('show'), 5000);
         }
         
-        function handleLogin(e) {
+        function handleRegister(e) {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
             const user = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
             const pass = document.getElementById('password').value.trim();
             
-            if (!user || !pass) {
+            if (!user || !email || !pass) {
                 showError('Please fill in all fields');
                 return;
             }
             
-            btn.disabled = true;
-            btn.textContent = 'Loading...';
+            if (pass.length < 8) {
+                showError('Password must be at least 8 characters');
+                return;
+            }
             
-            fetch(API + '/api/login', {
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+            
+            fetch(API + '/api/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: user, password: pass }),
+                body: JSON.stringify({ username: user, email: email, password: pass }),
                 credentials: 'include'
             })
             .then(r => r.json())
             .then(d => {
                 if (d.success) {
-                    goAfterLogin(Boolean(d.profile_exists));
+                    window.location.href = 'profile.html';
                 } else {
-                    showError(d.error || 'Login failed');
+                    showError(d.error || 'Registration failed');
                     btn.disabled = false;
-                    btn.textContent = 'Sign In';
+                    btn.textContent = 'Create Account';
                 }
             })
             .catch(e => {
                 showError('Error: ' + e.message);
                 btn.disabled = false;
-                btn.textContent = 'Sign In';
+                btn.textContent = 'Create Account';
             });
         }
-
-        function goAfterLogin(profileExists) {
-            window.location.href = profileExists ? 'dashboard.html' : 'profile.html';
-        }
-
-        function checkExistingSession() {
-            fetch(API + '/api/me', { credentials: 'include' })
-                .then((response) => {
-                    if (response.ok) {
-                        return response.json();
-                    }
-                    return null;
-                })
-                .then((data) => {
-                    if (data && data.success) {
-                        goAfterLogin(Boolean(data.profile));
-                    }
-                })
-                .catch(() => {});
-        }
-
-        checkExistingSession();
     </script>
 </body>
 </html>
