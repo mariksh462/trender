@@ -2,6 +2,7 @@ import json
 import re
 import xml.etree.ElementTree as ET
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from difflib import SequenceMatcher
@@ -10,7 +11,7 @@ from typing import Iterable, List, Optional
 
 import requests
 
-REQUEST_TIMEOUT = 20
+REQUEST_TIMEOUT = 5
 MAX_RESULTS = 100
 
 SOURCE_HEADERS = {
@@ -32,7 +33,7 @@ REDDIT_SOURCES = [
     ("Reddit /r/ukraina hot", "https://www.reddit.com/r/ukraina/hot.json?limit=25&t=day"),
     (
         "Reddit search Ukraine",
-        "https://www.reddit.com/search.json?q=(Ukraine%20OR%20Україна%20OR%20Київ%20OR%20Kyiv)&sort=hot&t=day&limit=25",
+        "https://www.reddit.com/search.json?q=(Ukraine%20OR%20%D0%A3%D0%BA%D1%80%D0%B0%D1%97%D0%BD%D0%B0%20OR%20%D0%9A%D0%B8%D1%97%D0%B2%20OR%20Kyiv)&sort=hot&t=day&limit=25",
     ),
 ]
 
@@ -335,37 +336,59 @@ def _collect_trends(limit: int = MAX_RESULTS) -> List[TrendCandidate]:
     sources = []
     errors = []
 
-    for source_name, url in RSS_SOURCES:
+    def fetch_rss(source_name, url):
         try:
-            sources.extend(_fetch_rss_candidates(source_name, url))
+            return _fetch_rss_candidates(source_name, url)
         except Exception as exc:
-            errors.append(f"RSS {source_name}: {type(exc).__name__}: {exc}")
+            errors.append(f"RSS {source_name}: {type(exc).__name__}")
+            return []
 
-    for source_name, url in REDDIT_SOURCES:
+    def fetch_reddit(source_name, url):
         try:
-            sources.extend(_fetch_reddit_candidates(source_name, url))
+            return _fetch_reddit_candidates(source_name, url)
         except Exception as exc:
-            errors.append(f"{source_name}: {type(exc).__name__}: {exc}")
+            errors.append(f"{source_name}: {type(exc).__name__}")
+            return []
 
-    for source_name, url in SOCIAL_SOURCES:
+    def fetch_social(source_name, url):
         try:
             if source_name.startswith("TikTok"):
-                sources.extend(_fetch_tiktok_candidates(source_name, url))
+                return _fetch_tiktok_candidates(source_name, url)
             else:
-                sources.extend(_fetch_instagram_candidates(source_name, url))
+                return _fetch_instagram_candidates(source_name, url)
         except Exception as exc:
-            errors.append(f"{source_name}: {type(exc).__name__}: {exc}")
+            errors.append(f"{source_name}: {type(exc).__name__}")
+            return []
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        futures = []
+
+        for source_name, url in RSS_SOURCES:
+            futures.append(executor.submit(fetch_rss, source_name, url))
+
+        for source_name, url in REDDIT_SOURCES:
+            futures.append(executor.submit(fetch_reddit, source_name, url))
+
+        for source_name, url in SOCIAL_SOURCES:
+            futures.append(executor.submit(fetch_social, source_name, url))
+
+        for future in as_completed(futures, timeout=10):
+            try:
+                result = future.result(timeout=1)
+                sources.extend(result)
+            except Exception:
+                pass
 
     merged = _score_and_merge_candidates(sources, limit=limit)
     if merged:
         return merged
 
-    error_text = "; ".join(errors[:5]) if errors else "no sources returned data"
-    raise RuntimeError(f"Не вдалося отримати тренди з доступних джерел: {error_text}")
+    error_text = f"{len(errors)} sources failed" if errors else "no sources returned data"
+    raise RuntimeError(f"Could not fetch trends from available sources: {error_text}")
 
 
 def _fetch_trends_via_rss() -> List[str]:
-    """Читає Google Trends RSS напряму без проксі."""
+    """Читає Google Trends RSS для України."""
     response = requests.get(
         "https://trends.google.com/trending/rss?geo=UA",
         timeout=25,
@@ -383,26 +406,42 @@ def _fetch_trends_via_rss() -> List[str]:
     return trends
 
 
-def get_top_daily_trends(limit: int = MAX_RESULTS) -> List[str]:
-    """Returns current trending topics. Uses fast defaults for reliability."""
-    TRENDS = [
-        "AI in Content Creation",
-        "Short-Form Video Trends",
-        "Viral Challenges",
-        "Authenticity in Marketing",
-        "User-Generated Content",
-        "Live Streaming",
-        "Personal Branding",
-        "Micro-Influencers",
-    ]
-    
-    # Quick attempt to fetch fresh trends with short timeout
+def get_top_daily_trends(limit: int = 5) -> List[str]:
+    """Топ 5 трендів для головного екрану — тільки Google Trends RSS, швидко."""
     try:
-        trends = _collect_trends(limit=limit)
-        if trends and len(trends) > 0:
-            print("✓ Fetched fresh trends")
-            return [trend.title for trend in trends[:limit]]
-    except Exception as error:
-        print(f"ℹ Using default trends")
-    
-    return TRENDS
+        rss_trends = _fetch_trends_via_rss()
+        if rss_trends:
+            return rss_trends[:limit]
+    except Exception:
+        pass
+    return []
+
+
+def get_all_trends_full(limit: int = 100) -> List[str]:
+    """До 100 трендів з усіх джерел для модального вікна."""
+    # Спочатку Google Trends (найавторитетніше джерело)
+    google_trends = []
+    try:
+        google_trends = _fetch_trends_via_rss()
+    except Exception:
+        pass
+
+    # Потім всі інші джерела паралельно
+    try:
+        collected = _collect_trends(limit)
+        titles = [t.title for t in collected]
+
+        # Google Trends ставимо на перші місця, решту — далі
+        seen = set(_normalize_title(t) for t in google_trends)
+        merged = list(google_trends)
+        for title in titles:
+            if _normalize_title(title) not in seen:
+                merged.append(title)
+                seen.add(_normalize_title(title))
+            if len(merged) >= limit:
+                break
+
+        return merged[:limit]
+    except Exception:
+        # Якщо всі джерела впали — повертаємо хоча б Google Trends
+        return google_trends[:limit]

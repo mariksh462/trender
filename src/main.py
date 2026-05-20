@@ -2,12 +2,13 @@ import json
 import os
 import hashlib
 import secrets
+from concurrent.futures import ThreadPoolExecutor
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 from ai_generator import generate_video_idea_advanced
 from database import create_table, get_user_by_username, register_user, save_user_profile, get_user_profile, save_idea, get_user_ideas, get_idea_by_id
-from trends_api import get_top_daily_trends
+from trends_api import get_top_daily_trends, get_all_trends_full
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -15,7 +16,6 @@ FRONTEND_DIR = os.path.join(BASE_DIR, "FrontEnd")
 HOST = "127.0.0.1"
 PORT = 8000
 
-# Простой session manager (в production використовувати Redis/DB)
 user_sessions = {}
 
 
@@ -52,6 +52,38 @@ def extract_user_id_from_cookie(headers):
     return None
 
 
+DEFAULT_TRENDS_TOP5 = [
+    "AI-Powered Content Creation",
+    "Short-Form Video Trends",
+    "Viral Challenges & Trends",
+    "Authenticity in Marketing",
+    "User-Generated Content",
+]
+
+DEFAULT_TRENDS_FULL = [
+    "AI-Powered Content Creation",
+    "Short-Form Video Trends",
+    "Viral Challenges & Trends",
+    "Authenticity in Marketing",
+    "User-Generated Content",
+    "Live Streaming Success",
+    "Personal Branding Tips",
+    "Micro-Influencer Growth",
+    "TikTok Viral Strategies",
+    "Instagram Reels Performance",
+    "YouTube Shorts Algorithm",
+    "Content Creator Tools",
+    "Social Media Engagement",
+    "Behind-the-Scenes Content",
+    "Educational Content Boom",
+    "Community Building",
+    "Niche Content Monetization",
+    "Video SEO Optimization",
+    "Trending Audio Tracks",
+    "Interactive Content Formats",
+]
+
+
 class TrendIdeaHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=FRONTEND_DIR, **kwargs)
@@ -72,22 +104,35 @@ class TrendIdeaHandler(SimpleHTTPRequestHandler):
             self.path = "/index.html"
             return super().do_GET()
 
-        # API для трендів
+        # Топ 5 трендів для головного екрану — швидко (таймаут 3с)
         if self.path == "/api/trends":
             try:
-                trends = get_top_daily_trends()
-                self._send_json({"success": True, "trends": trends})
-            except Exception as e:
-                self._send_json({"success": False, "error": str(e)}, status=HTTPStatus.BAD_GATEWAY)
+                with ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(get_top_daily_trends)
+                    trends = future.result(timeout=3)
+                self._send_json({"success": True, "trends": trends[:5]})
+            except Exception:
+                self._send_json({"success": True, "trends": DEFAULT_TRENDS_TOP5})
             return
 
-        # API для отримання профілю користувача
+        # До 100 трендів з усіх джерел для модального вікна
+        if self.path == "/api/trends/full":
+            try:
+                trends = get_all_trends_full(limit=100)
+                if trends:
+                    self._send_json({"success": True, "trends": trends})
+                else:
+                    self._send_json({"success": True, "trends": DEFAULT_TRENDS_FULL})
+            except Exception as e:
+                self._send_json({"success": True, "trends": DEFAULT_TRENDS_FULL})
+            return
+
+        # Профіль поточного користувача
         if self.path == "/api/me":
             user_id = extract_user_id_from_cookie(self.headers)
             if not user_id:
                 self._send_json({"success": False, "error": "Not authenticated"}, status=HTTPStatus.UNAUTHORIZED)
                 return
-
             profile = get_user_profile(user_id)
             if profile:
                 self._send_json({"success": True, "profile": profile})
@@ -95,18 +140,17 @@ class TrendIdeaHandler(SimpleHTTPRequestHandler):
                 self._send_json({"success": True, "profile": None})
             return
 
-        # API для отримання ідей користувача
+        # Список ідей користувача
         if self.path == "/api/ideas":
             user_id = extract_user_id_from_cookie(self.headers)
             if not user_id:
                 self._send_json({"success": False, "error": "Not authenticated"}, status=HTTPStatus.UNAUTHORIZED)
                 return
-
             ideas = get_user_ideas(user_id)
             self._send_json({"success": True, "ideas": ideas})
             return
 
-        # API для отримання однієї ідеї
+        # Одна ідея за id
         if self.path.startswith("/api/ideas/"):
             idea_id = self.path.split("/")[-1]
             try:
@@ -132,23 +176,18 @@ class TrendIdeaHandler(SimpleHTTPRequestHandler):
             self.send_error(HTTPStatus.BAD_REQUEST, "Invalid JSON")
             return
 
-        # Реєстрація
         if self.path == "/api/register":
             return self._handle_register(data)
 
-        # Логін
         if self.path == "/api/login":
             return self._handle_login(data)
 
-        # Логаут
         if self.path == "/api/logout":
             return self._handle_logout()
 
-        # Збереження профілю
         if self.path == "/api/profile":
             return self._handle_save_profile(data)
 
-        # Генерування ідеї
         if self.path == "/api/generate-idea":
             return self._handle_generate_idea(data)
 
@@ -167,7 +206,6 @@ class TrendIdeaHandler(SimpleHTTPRequestHandler):
             )
             return
 
-        # Перевіримо, чи не існує користувач
         if get_user_by_username(username):
             self._send_json(
                 {"success": False, "error": "User already exists"},
@@ -175,19 +213,12 @@ class TrendIdeaHandler(SimpleHTTPRequestHandler):
             )
             return
 
-        # Реєструємо користувача
         user_id = register_user(username, hash_password(password), email)
         if user_id:
-            # Створюємо сесію
             session_token = get_session_token()
             user_sessions[session_token] = user_id
-
             self._send_json(
-                {
-                    "success": True,
-                    "message": "User registered successfully",
-                    "user_id": user_id
-                },
+                {"success": True, "message": "User registered successfully", "user_id": user_id},
                 status=HTTPStatus.CREATED,
                 set_cookie=f"session_token={session_token}; Path=/; HttpOnly"
             )
@@ -198,7 +229,7 @@ class TrendIdeaHandler(SimpleHTTPRequestHandler):
             )
 
     def _handle_login(self, data):
-        """Логіндження користувача."""
+        """Логін користувача."""
         username = data.get("username", "").strip()
         password = data.get("password", "").strip()
 
@@ -217,10 +248,8 @@ class TrendIdeaHandler(SimpleHTTPRequestHandler):
             )
             return
 
-        # Створюємо сесію
         session_token = get_session_token()
         user_sessions[session_token] = user["id"]
-
         self._send_json(
             {
                 "success": True,
@@ -233,7 +262,6 @@ class TrendIdeaHandler(SimpleHTTPRequestHandler):
 
     def _handle_logout(self):
         """Логаут користувача."""
-        # Видаляємо cookie
         self._send_json(
             {"success": True, "message": "Logged out successfully"},
             set_cookie="session_token=; Path=/; HttpOnly; Max-Age=0"
@@ -297,7 +325,6 @@ class TrendIdeaHandler(SimpleHTTPRequestHandler):
             return
 
         try:
-            # Отримуємо профіль користувача
             profile = get_user_profile(user_id)
             if not profile:
                 self._send_json(
@@ -306,7 +333,6 @@ class TrendIdeaHandler(SimpleHTTPRequestHandler):
                 )
                 return
 
-            # Генеруємо ідею на основі профілю
             idea_data = generate_video_idea_advanced(
                 profile["business_prompt"],
                 profile["brand_description"],
@@ -322,7 +348,6 @@ class TrendIdeaHandler(SimpleHTTPRequestHandler):
                 )
                 return
 
-            # Зберігаємо ідею в БД
             idea_id = save_idea(
                 user_id,
                 idea_data.get("title", "Video Idea"),
@@ -376,11 +401,9 @@ class TrendIdeaHandler(SimpleHTTPRequestHandler):
 def main():
     """Запускає сервер."""
     create_table()
-    
     server = ThreadingHTTPServer((HOST, PORT), TrendIdeaHandler)
     print(f"✓ Server running on http://{HOST}:{PORT}")
     print(f"✓ Open the dashboard page in your browser: http://{HOST}:{PORT}/dashboard.html")
-    
     try:
         server.serve_forever()
     except KeyboardInterrupt:
